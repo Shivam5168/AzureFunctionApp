@@ -1,11 +1,5 @@
 const { app } = require('@azure/functions');
-const mongoose = require('mongoose');
-
-// MongoDB connection string
-const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
-
-// Connect to MongoDB
-mongoose.connect(connectionString);
+const { connectionString, connectionOptions, mongoose } = require('../../dbConnection');
 
 // Define the cart schema
 const cartSchema = new mongoose.Schema({
@@ -24,9 +18,13 @@ app.http('addProductInCartById', {
     methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        context.log(`Http function processed request for url "${request.url}"`);
+        context.log(`HTTP function processed request for URL "${request.url}"`);
 
         try {
+            // Connect to the database
+            await mongoose.connect(connectionString, connectionOptions);
+            context.log('Connected to MongoDB');
+
             const { _id, quantity } = await request.json();
 
             if (!_id || quantity === undefined) {
@@ -54,12 +52,12 @@ app.http('addProductInCartById', {
             }
 
             // Save the cart
-            await cart.save();
+            const updatedCart = await cart.save();
 
-            context.log(`Product added to cart with id: ${_id}`);
+            context.log(`Product added to cart with ID: ${_id}`);
             return {
                 status: 201,
-                body: cart
+                body: updatedCart
             };
         } catch (error) {
             context.log.error("Error adding product to cart", error);
@@ -67,6 +65,10 @@ app.http('addProductInCartById', {
                 status: 500,
                 body: "Internal server error"
             };
+        } finally {
+            // Close the connection after the request is handled
+            await mongoose.connection.close();
+            context.log('Disconnected from MongoDB');
         }
     }
 });

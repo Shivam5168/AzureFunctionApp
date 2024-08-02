@@ -1,12 +1,5 @@
 const { app } = require('@azure/functions');
-const mongoose = require('mongoose');
-
-// URL-encoded connection string
-const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
-
-mongoose.connect(connectionString);
-
-// The rest of your function...
+const { connectionString, connectionOptions, mongoose } = require('../../dbConnection');
 
 const productSchema = new mongoose.Schema({
     productName: { type: String, required: true },
@@ -21,11 +14,14 @@ app.http('addProducts', {
     methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        context.log(`Http function processed request for url "${request.url}"`);
+        context.log(`HTTP function processed request for URL "${request.url}"`);
 
         try {
-            const productData = await request.json();
+            // Connect to the database
+            await mongoose.connect(connectionString, connectionOptions);
+            context.log('Connected to MongoDB');
 
+            const productData = await request.json();
             const { productName, productPrice, productImage, productDescription } = productData;
 
             if (!productName || !productPrice || !productImage || !productDescription) {
@@ -41,8 +37,8 @@ app.http('addProducts', {
             });
 
             const createdProduct = await newProduct.save();
+            context.log(`Created product with ID: ${createdProduct._id}`);
 
-            context.log(`Created product with id: ${createdProduct._id}`);
             return {
                 status: 201,
                 body: createdProduct
@@ -53,6 +49,10 @@ app.http('addProducts', {
                 status: 500,
                 body: "Internal server error"
             };
+        } finally {
+            // Close the connection after the request is handled
+            await mongoose.connection.close();
+            context.log('Disconnected from MongoDB');
         }
     }
 });

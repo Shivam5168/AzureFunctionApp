@@ -11,5 +11,8 @@
     "@azure/functions": "^4.0.0",
     "mongoose": "^8.5.2"
   },
-  "main": "src/{index.js,functions/*.js}"
+  "main": "src/{index.js,functions/*.js}",
+  "devDependencies": {
+    "@types/node": "^22.0.2"
+  }
 }

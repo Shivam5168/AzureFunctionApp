@@ -1,10 +1,5 @@
 const { app } = require('@azure/functions');
-const mongoose = require('mongoose');
-
-const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
-
-// Connect to the database if not already connected
-mongoose.connect(connectionString);
+const { connectionString, connectionOptions, mongoose } = require('../../dbConnection');
 
 // Define the product schema
 const productSchema = new mongoose.Schema({
@@ -18,10 +13,10 @@ const productSchema = new mongoose.Schema({
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
 app.http('getAllProductById', {
-    methods: ['GET'],
+    methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        context.log(`Http function processed request for url "${request.url}"`);
+        context.log(`HTTP function processed request for URL "${request.url}"`);
 
         // Get the product ID from the query parameters
         const productId = request.query.get('id');
@@ -34,6 +29,10 @@ app.http('getAllProductById', {
         }
 
         try {
+            // Connect to the database
+            await mongoose.connect(connectionString, connectionOptions);
+            context.log('Connected to MongoDB');
+
             const product = await Product.findById(productId);
 
             if (!product) {
@@ -53,6 +52,10 @@ app.http('getAllProductById', {
                 status: 500,
                 body: "Internal server error"
             };
+        } finally {
+            // Close the connection after the request is handled
+            await mongoose.connection.close();
+            context.log('Disconnected from MongoDB');
         }
     }
 });

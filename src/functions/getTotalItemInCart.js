@@ -1,11 +1,5 @@
 const { app } = require('@azure/functions');
-const mongoose = require('mongoose');
-
-// MongoDB connection string
-const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
-
-// Connect to MongoDB
-mongoose.connect(connectionString);
+const { connectionString, connectionOptions, mongoose } = require('../../dbConnection');
 
 // Define the cart schema
 const cartSchema = new mongoose.Schema({
@@ -22,12 +16,16 @@ const Cart = mongoose.models.Cart || mongoose.model('Cart', cartSchema);
 
 // Function to get total distinct items in the cart
 app.http('getTotalItemsInCart', {
-    methods: ['GET'],
+    methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
-        context.log(`Http function processed request for url "${request.url}"`);
+        context.log(`HTTP function processed request for URL "${request.url}"`);
 
         try {
+            // Connect to the database
+            await mongoose.connect(connectionString, connectionOptions);
+            context.log('Connected to MongoDB');
+
             // Find the cart
             const cart = await Cart.findOne({});
 
@@ -50,6 +48,10 @@ app.http('getTotalItemsInCart', {
                 status: 500,
                 body: "Internal server error",
             };
+        } finally {
+            // Close the connection after the request is handled
+            await mongoose.connection.close();
+            context.log('Disconnected from MongoDB');
         }
     }
 });
