@@ -1,15 +1,6 @@
 const { app } = require('@azure/functions');
 const { connectionString, connectionOptions, mongoose } = require('../../dbConnection');
 
-const productSchema = new mongoose.Schema({
-    productName: { type: String, required: true },
-    productPrice: { type: Number, required: true },
-    productImage: { type: String, required: true },
-    productDescription: { type: String, required: true }
-});
-
-const Product = mongoose.model('Product', productSchema);
-
 app.http('addProducts', {
     methods: ['POST'],
     authLevel: 'anonymous',
@@ -20,6 +11,17 @@ app.http('addProducts', {
             // Connect to the database
             await mongoose.connect(connectionString, connectionOptions);
             context.log('Connected to MongoDB');
+
+            // Define the product schema
+            const productSchema = new mongoose.Schema({
+                productName: { type: String, required: true },
+                productPrice: { type: Number, required: true },
+                productImage: { type: String, required: true },
+                productDescription: { type: String, required: true }
+            });
+
+            // Check if the Product model is already defined
+            const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
 
             const productData = await request.json();
             const { productName, productPrice, productImage, productDescription } = productData;
