@@ -4,10 +4,7 @@ const mongoose = require('mongoose');
 const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
 
 // Connect to the database if not already connected
-mongoose.connect(connectionString, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+mongoose.connect(connectionString);
 
 // Define the product schema
 const productSchema = new mongoose.Schema({

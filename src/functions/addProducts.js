@@ -4,10 +4,7 @@ const mongoose = require('mongoose');
 // URL-encoded connection string
 const connectionString = "mongodb+srv://Shivam5168:Pradhan%402005@demo2005.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000";
 
-mongoose.connect(connectionString, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+mongoose.connect(connectionString);
 
 // The rest of your function...
 
